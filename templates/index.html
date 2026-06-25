@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Configuração Veicular</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-900 text-gray-100 min-h-screen flex items-center justify-center">
+
+<div class="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700 w-96">
+
+    <h2 class="text-xl font-bold text-blue-400 mb-4">
+        Configurar Unidade Veicular
+    </h2>
+
+    <form id="form" class="space-y-4">
+
+        <input
+            id="device_id"
+            placeholder="Device ID"
+            class="w-full p-2 bg-gray-700 rounded border border-gray-600"
+        >
+
+        <input
+            id="codigo_empresa"
+            placeholder="Código Empresa"
+            class="w-full p-2 bg-gray-700 rounded border border-gray-600"
+            required
+        >
+
+        <input
+            id="placa"
+            placeholder="Placa"
+            class="w-full p-2 bg-gray-700 rounded border border-gray-600"
+            required
+        >
+
+        <button
+            id="btn"
+            class="w-full bg-blue-600 hover:bg-blue-500 py-2 rounded font-bold"
+            type="submit">
+
+            Salvar Configuração
+
+        </button>
+
+    </form>
+
+    <p id="status" class="mt-4 text-center text-sm"></p>
+
+</div>
+
+<script>
+
+document.getElementById("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const status = document.getElementById("status");
+    const btn = document.getElementById("btn");
+
+    const payload = {
+        codigo_empresa: document.getElementById("codigo_empresa").value,
+        placa: document.getElementById("placa").value,
+        device_id: document.getElementById("device_id").value
+    };
+
+    console.log("PAYLOAD ENVIADO:", payload);
+
+    try {
+        btn.disabled = true;
+        btn.innerText = "Salvando...";
+
+        const res = await fetch("/api/config", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        console.log("RESPOSTA:", data);
+
+        if (res.ok && data.ok) {
+            status.innerText = "✔ Configuração salva com sucesso!";
+            status.className = "mt-4 text-center text-green-400";
+        } else {
+            status.innerText = "✖ Erro ao salvar configuração";
+            status.className = "mt-4 text-center text-red-400";
+        }
+
+    } catch (err) {
+        console.error(err);
+
+        status.innerText = "✖ Erro de conexão com servidor";
+        status.className = "mt-4 text-center text-red-400";
+
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "Salvar Configuração";
+    }
+});
+
+</script>
+
+</body>
+</html>

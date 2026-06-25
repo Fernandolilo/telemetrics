@@ -1,0 +1,24 @@
+[
+    {
+        "codigo_empresa": "001",
+        "placa": "ABC1234",
+        "mac_scanner": "1C:A1:35:69:8D:C5",
+        "mac_rasp": "B8:27:EB:AA:BB:CC",
+        "rpm": 850,
+        "velocidade": 60.5,
+        "odometro": 125430.7,
+        "timestamp": "2026-06-25T09:16:03.995861",
+        "status": "ativo"
+    },
+    {
+        "codigo_empresa": "001",
+        "placa": "ABC1234",
+        "mac_scanner": "1C:A1:35:69:8D:C5",
+        "mac_rasp": "B8:27:EB:AA:BB:CC",
+        "rpm": 850,
+        "velocidade": 60.5,
+        "odometro": 125430.7,
+        "timestamp": "2026-06-25T09:32:19.786893",
+        "status": "ativo"
+    }
+]

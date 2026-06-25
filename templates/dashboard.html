@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Itech - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-900 text-white p-8">
+
+<div class="max-w-5xl mx-auto">
+
+    <h1 class="text-3xl font-bold text-blue-400 mb-8">
+        Itech - Painel Principal
+    </h1>
+
+    <!-- GRID DE BOTÕES -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- CONFIGURAR NOVO -->
+        <a href="/config"
+           class="bg-gray-800 p-8 rounded border border-gray-700 hover:border-blue-500 transition">
+
+            <h2 class="text-2xl font-bold text-blue-400 mb-2">
+                ⚙ Configurar Novo
+            </h2>
+
+            <p class="text-sm text-gray-300">
+                Cadastrar nova unidade veicular (empresa, placa e device)
+            </p>
+
+        </a>
+
+        <!-- BUSCAR VEÍCULO -->
+        <a href="/vehicle"
+           class="bg-gray-800 p-8 rounded border border-gray-700 hover:border-green-500 transition">
+
+            <h2 class="text-2xl font-bold text-green-400 mb-2">
+                🚗 Buscar Veículo
+            </h2>
+
+            <p class="text-sm text-gray-300">
+                Consultar telemetria por placa em tempo real
+            </p>
+
+        </a>
+
+
+</div>
+
+</body>
+</html>
