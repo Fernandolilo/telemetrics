@@ -59,16 +59,21 @@ class VehicleService:
     # ==========================
     # VALIDATION
     # ==========================
+    # ==========================
     def validate_vehicle(self, placa, config):
-    
-        print("PLACA PESQUISADA:", placa)
-        print("PLACA CONFIG:", config.get("placa"))
 
+        # Se não houver configuração salva,
+        # não existe veículo associado.
         if not config:
             return False
 
-        return config.get("placa", "").strip().upper() == placa.strip().upper()
+        placa_config = str(config.get("placa", "")).strip().upper()
+        placa_consulta = str(placa).strip().upper()
 
+        print(f"PLACA PESQUISADA: {placa_consulta}")
+        print(f"PLACA CONFIG: {placa_config}")
+
+        return placa_config == placa_consulta
     # ==========================
     # MAIN FIND
     # ==========================

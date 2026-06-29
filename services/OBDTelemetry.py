@@ -8,14 +8,15 @@ class OBDTelemetry:
         self.bt = bt
         self.rpm_history = []
 
+    # Em services/OBDTelemetry.py
     async def start_session(self):
         print("[OBD] Resetando adaptador...")
+        # Adicione este check de segurança
+        if not self.bt.client or not self.bt.client.is_connected:
+            await self.bt.ensure_connected() 
+        
         await self.bt.send("ATZ", delay=0.5)
-        print("[OBD] Desativando Echo...")
-        await self.bt.send("ATE0", delay=0.2)
-        print("[OBD] Configurando protocolo automático...")
-        await self.bt.send("ATSP0", delay=0.2)
-        print("[OBD] Sessão iniciada com sucesso!")
+    # ...
 
     async def get_rpm(self):
         resp = await self.bt.send("010C", delay=0.2)

@@ -1,5 +1,9 @@
+import asyncio
+import json
+import os
 from flask import Flask, jsonify, render_template, request
-   # Controllers
+
+# Importações dos seus módulos
 from controllers.config_controller import config_bp
 from controllers.telemetria_controller import telemetria_bp
 from controllers.VehicleController import vehicle_bp
@@ -9,20 +13,28 @@ from services.OBDTelemetry import OBDTelemetry
 from services.MonitoringService import MonitoringService
 
 def create_app():
+    # Define explicitamente a pasta de templates
+    template_dir = os.path.abspath('templates')
+    app = Flask(__name__, template_folder=template_dir)
 
-    app = Flask(__name__)
+    # --- Rotas Síncronas (Wrapper para lógica assíncrona) ---
     
+    bt_service = None
+
+    def get_bt_service():
+        global bt_service
+        if bt_service is None:
+            bt_service = BluetoothService()
+        return bt_service
+
     @app.route("/")
     def dashboard():
         return render_template("dashboard.html")
 
-    # HTML
     @app.route("/config")
     def home():
         return render_template("index.html")
-    
-    
-    # No seu app.py, a rota do vehicle precisa agora receber a placa opcionalmente
+
     @app.route("/vehicle", defaults={'placa': None})
     @app.route("/vehicle/<placa>")
     def vehicle_page(placa):
@@ -30,55 +42,51 @@ def create_app():
     
     @app.route('/scanner')
     def scanner_page():
-        return render_template('provision.html') # Certifique-se de que o arquivo esteja na pasta /templates
+        return render_template('provision.html')
 
-
-    @app.route('/api/scanner/bind', methods=['POST'])
-    async def bind_vehicle():
-        global bt
-        data = request.get_json()
-        modelo = data.get('modelo')
-        
-        # --- Sua lógica preservada ---
-        telemetria = OBDTelemetry(bt)
-        leitor = LeitorOdometroOBD(PERFIS_MONTADORAS)
-        monitor = MonitoringService(bt, telemetria, leitor)
-        
-        # Inicia a sessão e o monitoramento em background
-        await telemetria.start_session()
-        
-        # IMPORTANTE: Usamos o asyncio para não bloquear o servidor Flask
-        asyncio.create_task(monitor.run_monitor(modelo, PERFIS_MONTADORAS[modelo]))
-        
-        # Salva o vínculo para o sistema saber que já está configurado
-        with open('vinculo_atual.json', 'w') as f:
-            json.dump({"modelo": modelo, "status": "bound"}, f)
-        
-        return jsonify({"status": "success"})
-
-    # Rota para conectar e retornar a lista de perfis
     @app.route('/api/scanner/connect', methods=['POST'])
-    async def connect_scanner():
-        global bt
-        try:
+    def connect_scanner():
+        # Wrapper síncrono para lógica Bluetooth
+        async def _connect():
             bt = BluetoothService()
-            print("Buscando scanner...")
-            # Tenta conectar
             if await bt.find_and_connect_by_name(["OBDII", "ELM327"]):
-                # Retorna a lista de perfis assim que conectar
-                return jsonify({
-                    "status": "connected",
-                    "profiles": list(PERFIS_MONTADORAS.keys())
-                })
+                return {"status": "connected", "profiles": list(PERFIS_MONTADORAS.keys())}
+            return None
+
+        try:
+            result = asyncio.run(_connect())
+            if result:
+                return jsonify(result)
             return jsonify({"status": "error", "message": "Scanner não encontrado"}), 404
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)}), 500
 
+    @app.route('/api/scanner/bind', methods=['POST'])
+    def bind_vehicle():
+        data = request.get_json()
+        modelo = data.get('modelo')
+        
+        async def _bind():
+            bt = BluetoothService()
+            telemetria = OBDTelemetry(bt)
+            leitor = LeitorOdometroOBD(PERFIS_MONTADORAS)
+            monitor = MonitoringService(bt, telemetria, leitor)
+            await telemetria.start_session()
+            asyncio.create_task(monitor.run_monitor(modelo, PERFIS_MONTADORAS[modelo]))
+            return True
 
+        asyncio.run(_bind())
+        with open('vinculo_atual.json', 'w') as f:
+            json.dump({"modelo": modelo, "status": "bound"}, f)
+        return jsonify({"status": "success"})
 
+    # Registro de Blueprints
     app.register_blueprint(config_bp)
     app.register_blueprint(telemetria_bp)
     app.register_blueprint(vehicle_bp)
 
     return app
 
+if __name__ == "__main__":
+    app = create_app()
+    app.run(host='0.0.0.0', port=5000, debug=True)

@@ -10,6 +10,15 @@ class BluetoothService:
         self.rx_buffer = ""
         self.lock = asyncio.Lock()
 
+    async def ensure_connected(self):
+        async with self.lock:
+
+            if self.client and self.client.is_connected:
+                return True
+
+            return False
+
+
     async def find_and_connect_by_name(self, keywords, timeout=10):
 
         devices = await BleakScanner.discover(timeout=timeout)
@@ -33,40 +42,33 @@ class BluetoothService:
                     self._notify_handler
                 )
 
+                self.rx_buffer = ""  # limpa buffer ao conectar
                 return True
 
         return False
 
-    # 🔥 recebe dados contínuos
+
     def _notify_handler(self, sender, data):
         text = data.decode(errors="ignore")
-        self.rx_buffer += text
+        text = self._clean(text)
 
-    async def send(self, cmd: str, delay=0.3):
+        if text:
+            self.rx_buffer += text
 
-        async with self.lock:
+            # limita crescimento do buffer
+            if len(self.rx_buffer) > 5000:
+                self.rx_buffer = self.rx_buffer[-2000:]
 
-            self.rx_buffer = ""  # 🔥 limpa antes de cada comando
-
-            await self.client.write_gatt_char(
-                self.uart_char,
-                (cmd + "\r").encode()
-            )
-
-            await asyncio.sleep(delay)
-
-            resp = self.rx_buffer
-            self.rx_buffer = ""
-
-            return self._clean(resp)
 
     def _clean(self, data: str):
-        if not data:
-            return None
-
         return (
             data.replace(" ", "")
                 .replace("\r", "")
                 .replace("\n", "")
                 .replace(">", "")
         )
+
+
+    async def disconnect(self):
+        if self.client and self.client.is_connected:
+            await self.client.disconnect()
