@@ -50,7 +50,9 @@ def create_app():
         async def _connect():
             bt = BluetoothService()
             if await bt.find_and_connect_by_name(["OBDII", "ELM327"]):
+                print("Conectado")
                 return {"status": "connected", "profiles": list(PERFIS_MONTADORAS.keys())}
+                
             return None
 
         try:

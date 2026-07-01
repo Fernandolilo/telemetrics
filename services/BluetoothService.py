@@ -46,6 +46,22 @@ class BluetoothService:
                 return True
 
         return False
+    
+    async def send(self, command, delay=0.2):
+
+        if not await self.ensure_connected():
+            return None
+
+        self.rx_buffer = ""
+
+        await self.client.write_gatt_char(
+            self.uart_char,
+            (command + "\r").encode()
+        )
+
+        await asyncio.sleep(delay)
+
+        return self.rx_buffer
 
 
     def _notify_handler(self, sender, data):
